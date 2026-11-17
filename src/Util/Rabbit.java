@@ -60,7 +60,7 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider{
             if (eatGrass(world)) { // spiste, færdig for denne gang
             } else if (hasBurrow(world) == false && random.nextInt(10) == 0) {
                 setBurrow(world);
-            } else if (canReproduce(world) && random.nextInt(10) == 0) {
+            } else if (canReproduce(world) && random.nextInt(7) == 0) {
                 giveBirth(world);
             } else {
                 move(world);
