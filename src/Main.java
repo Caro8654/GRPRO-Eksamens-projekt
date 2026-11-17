@@ -8,6 +8,7 @@ import itumulator.executable.Program;
 import itumulator.world.Location;
 import itumulator.world.World;
 import Util.Grass;
+import Util.Rabbit;
 
 public class Main {
 
@@ -18,48 +19,65 @@ public class Main {
 
         //GROW GRASS
         try{
-            Scanner s  = new Scanner(new File("week-1/t1-1a.txt"));
+            Scanner s  = new Scanner(new File("week-1/t1-1c.txt"));
             int size = Integer.parseInt(s.nextLine());
 
-            Program p = new Program(size, 800, 75);
+            Program p = new Program(size, 800, 150);
             World w = p.getWorld();
             p.setDisplayInformation(Grass.class, new DisplayInformation(Color.GREEN, "grass"));
+            p.setDisplayInformation(Rabbit.class, new DisplayInformation(Color.GRAY, "rabbit-large"));
 
             Random r = new Random();
 
             while(s.hasNextLine()) {
-                String[] input = s.nextLine().split(" ");
+                String line = s.nextLine().trim();
+                String[] input = line.split("\\s+");
+
+                if (input.length < 2) {
+                    continue;
+                }
+
                 String type = input[0];
 
-            int amount;
-                if (input[1].contains("-") ) {
-                    String[] range = input[1].split("-");
-                    int min = Integer.parseInt(range[0]);
-                    int max = Integer.parseInt(range[1]);
-                    amount = min + r.nextInt(max - min + 1);
-                } else {
-                    amount = Integer.parseInt(input[1]);
-                }
-
-            if (type.equals("grass")) {
-                for (int i = 0; i < amount; i++) {
-                    Location l = new Location(r.nextInt(size), r.nextInt(size));
-                    while (w.containsNonBlocking(l)) {
-                        l = new Location (r.nextInt(size), r.nextInt(size));
+                int amount;
+                    if (input[1].contains("-") ) {
+                        String[] range = input[1].split("-");
+                        int min = Integer.parseInt(range[0]);
+                        int max = Integer.parseInt(range[1]);
+                        amount = min + r.nextInt(max - min + 1);
+                    } else {
+                        amount = Integer.parseInt(input[1]);
                     }
-                    w.setTile(l, new Grass());
+
+                if (type.equals("grass")) {
+                    for (int i = 0; i < amount; i++) {
+                        Location l = new Location(r.nextInt(size), r.nextInt(size));
+                        while (w.containsNonBlocking(l)) {
+                            l = new Location (r.nextInt(size), r.nextInt(size));
+                        }
+                        w.setTile(l, new Grass());
+                    }
+                } else if (type.equals("rabbit")) {
+                    for (int i = 0; i < amount; i++) {
+                        Location l = new Location(r.nextInt(size), r.nextInt(size));
+                        while(!w.isTileEmpty(l)) {
+                            l = new Location(r.nextInt(size), r.nextInt(size));
+                        }
+                        w.setTile(l, new Rabbit());
+                    }
                 }
             }
-
+            
             s.close();  
             p.show();
-        }
+
+            for (int i = 0; i < 200; i++) {
+                p.simulate();
+            }
+            
 
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
-        
-
     }
-
 }
