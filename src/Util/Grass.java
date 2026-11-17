@@ -4,12 +4,19 @@ import itumulator.world.NonBlocking;
 import itumulator.simulator.Actor;
 import itumulator.world.World;
 import itumulator.world.Location;
-
+import itumulator.executable.DynamicDisplayInformationProvider;
+import itumulator.executable.DisplayInformation;
+import java.awt.Color;
 import java.util.*;
 
 
-public class Grass implements NonBlocking, Actor{
+public class Grass implements NonBlocking, Actor, DynamicDisplayInformationProvider{
     
+    @Override
+    public DisplayInformation getInformation() {
+        return new DisplayInformation(Color.GREEN, "grass");
+    }
+
     @Override
     public void act(World world) {
         Random r = new Random();

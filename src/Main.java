@@ -1,9 +1,7 @@
-import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-import itumulator.executable.DisplayInformation;
 import itumulator.executable.Program;
 import itumulator.world.Location;
 import itumulator.world.World;
@@ -25,9 +23,6 @@ public class Main {
 
             Program p = new Program(size, 800, 750);
             World w = p.getWorld();
-            p.setDisplayInformation(Grass.class, new DisplayInformation(Color.GREEN, "grass"));
-            p.setDisplayInformation(Rabbit.class, new DisplayInformation(Color.GRAY, "rabbit-large"));
-            p.setDisplayInformation(Burrow.class, new DisplayInformation(Color.BLACK, "hole"));
 
 
             Random r = new Random();
@@ -85,7 +80,6 @@ public class Main {
             for (int i = 0; i < 200; i++) {
                 p.simulate();
             }
-            
 
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
