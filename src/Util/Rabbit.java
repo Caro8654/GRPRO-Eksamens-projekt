@@ -14,13 +14,15 @@ public class Rabbit implements Actor{
     private int age;
     private int energy;
     private int food;
-    private int maxAge = 50;
+    private int maxAge = 150;
     private Random random = new Random();
+    private Burrow burrow;
 
     public Rabbit(){
         this.age = 0;
         this.energy = 100;
-        this.food = 50;
+        this.food = 1000;
+        this.burrow = null;
     }
 
     // act() bliver kaldt af simulatoren ved hvert skridt. Her kaldes alle ting kaninen gør.
@@ -32,21 +34,26 @@ public class Rabbit implements Actor{
 
      Location current = world.getLocation(this);
 
-    // Kaninen dør, hvis den er sulten (food = 0) eller for gammel
+        // Kaninen dør, hvis den er sulten (food = 0) eller for gammel
     if (food <= 0 || age >= maxAge) {
         world.delete(this); // fjerner kaninen fra verdenen
         return; // stop her, ellers fortsætter koden for en død kanin
-    }
+        }
 
-    // Om dagen: spis græs, hvis der er noget, ellers gå rundt
+        // Om dagen: spis græs, hvis der er noget, ellers gå rundt
      if (world.isDay()) {
-        if (eatGrass(world)) {
-            // spiste, færdig for denne gang
+        if (eatGrass(world)) { // spiste, færdig for denne gang
+        } else if (hasBurrow(world) == false && random.nextInt(20) == 0) {
+            setBurrow(world);
         } else if (reproduce(world) && random.nextInt(10) == 0) {
             giveBirth(world);
         } else {
             move(world);
+        } 
         }
+
+        if (world.isNight()) {
+            moveToBurrow(world);
         }
     }
 
@@ -108,6 +115,42 @@ public class Rabbit implements Actor{
         ArrayList<Location> options = new ArrayList<>(free);
         Location spot = options.get(random.nextInt(options.size()));
         world.setTile(spot, new Rabbit());
+        }
     }
+
+    private boolean hasBurrow(World world) {
+        if (this.burrow == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private void setBurrow(World world) {
+    Location current = world.getLocation(this);
+
+    // 1. Er der et hul ved siden af? Så del det.
+    for (Location l : world.getSurroundingTiles(current)) {
+        if (world.containsNonBlocking(l) && world.getNonBlocking(l) instanceof Burrow) {
+            burrow = (Burrow) world.getNonBlocking(l);
+            return;
+        }
+    }
+
+    // 2. Ellers: grav et nyt hul, hvor kaninen står
+    if (world.containsNonBlocking(current) && world.getNonBlocking(current) instanceof Grass) {
+        world.delete(world.getNonBlocking(current));   // fjern græs, så der er plads
+    }
+    if (!world.containsNonBlocking(current)) {
+        burrow = new Burrow();
+        world.setTile(current, burrow);
+    }
+}
+
+    private void moveToBurrow(World world) {
+        if (hasBurrow(world)) {
+            Location target = world.getLocation(this.burrow);
+            world.move(this, target);
+        }
     }
 }

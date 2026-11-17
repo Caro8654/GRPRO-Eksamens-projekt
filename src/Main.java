@@ -9,6 +9,7 @@ import itumulator.world.Location;
 import itumulator.world.World;
 import Util.Grass;
 import Util.Rabbit;
+import Util.Burrow;
 
 public class Main {
 
@@ -26,6 +27,8 @@ public class Main {
             World w = p.getWorld();
             p.setDisplayInformation(Grass.class, new DisplayInformation(Color.GREEN, "grass"));
             p.setDisplayInformation(Rabbit.class, new DisplayInformation(Color.GRAY, "rabbit-large"));
+            p.setDisplayInformation(Burrow.class, new DisplayInformation(Color.BLACK, "hole"));
+
 
             Random r = new Random();
 
@@ -64,6 +67,14 @@ public class Main {
                             l = new Location(r.nextInt(size), r.nextInt(size));
                         }
                         w.setTile(l, new Rabbit());
+                    }
+                } else if (type.equals("burrow")) {
+                        for (int i = 0; i < amount; i++) {
+                        Location l = new Location(r.nextInt(size), r.nextInt(size));
+                        while(!w.isTileEmpty(l)) {
+                            l = new Location(r.nextInt(size), r.nextInt(size));
+                        }
+                        w.setTile(l, new Burrow());
                     }
                 }
             }
