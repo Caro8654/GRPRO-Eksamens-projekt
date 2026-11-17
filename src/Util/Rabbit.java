@@ -14,14 +14,13 @@ public class Rabbit implements Actor{
     private int age;
     private int energy;
     private int food;
-    private int maxAge = 100;
+    private int maxAge = 50;
     private Random random = new Random();
 
     public Rabbit(){
         this.age = 0;
         this.energy = 100;
-        this.food = 100;
-        
+        this.food = 50;
     }
 
     // act() bliver kaldt af simulatoren ved hvert skridt. Her kaldes alle ting kaninen gør.
@@ -31,6 +30,8 @@ public class Rabbit implements Actor{
     food--;     // mister 1 food pr. skridt
     energy--;   // den mister også lidt energi, når den bliver ældre
 
+     Location current = world.getLocation(this);
+
     // Kaninen dør, hvis den er sulten (food = 0) eller for gammel
     if (food <= 0 || age >= maxAge) {
         world.delete(this); // fjerner kaninen fra verdenen
@@ -38,16 +39,20 @@ public class Rabbit implements Actor{
     }
 
     // Om dagen: spis græs, hvis der er noget, ellers gå rundt
-    if (world.isDay()) {
-        if (!eatGrass(world)) {   // eatGrass returnerer true, hvis kaninen kunne spise noget
-    move(world);          // ellers (false) flytter kaninen sig
-}
+     if (world.isDay()) {
+        if (eatGrass(world)) {
+            // spiste, færdig for denne gang
+        } else if (reproduce(world) && random.nextInt(10) == 0) {
+            giveBirth(world);
+        } else {
+            move(world);
+        }
         }
     }
 
     // Giver kaninen mere mad. Bliver kaldt, når den har spist græs.
     public void eat() {
-        food++;
+        food = food + 10;;
     }
 
     // Flytter kaninen til et tilfældigt ledigt felt ved siden af sig
@@ -80,7 +85,29 @@ public class Rabbit implements Actor{
     }
     
     return false;   // der var intet græs at spise
-    
     }
 
+    private boolean reproduce(World world) {
+    Location current = world.getLocation(this);
+    Set<Location> neighbours = world.getSurroundingTiles(current);
+
+    for (Location l : neighbours) {
+        Object o = world.getTile(l);
+        if (o instanceof Rabbit) {
+            return true;
+        }
+    }
+    return false;
+    }
+
+    private void giveBirth(World world) {
+    Location current = world.getLocation(this);
+    Set<Location> free = world.getEmptySurroundingTiles(current);
+
+    if (!free.isEmpty()) {
+        ArrayList<Location> options = new ArrayList<>(free);
+        Location spot = options.get(random.nextInt(options.size()));
+        world.setTile(spot, new Rabbit());
+    }
+    }
 }

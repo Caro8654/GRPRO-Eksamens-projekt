@@ -19,10 +19,10 @@ public class Main {
 
         //GROW GRASS
         try{
-            Scanner s  = new Scanner(new File("week-1/t1-1c.txt"));
+            Scanner s  = new Scanner(new File("week-1/t1-2cde.txt"));
             int size = Integer.parseInt(s.nextLine());
 
-            Program p = new Program(size, 800, 150);
+            Program p = new Program(size, 800, 750);
             World w = p.getWorld();
             p.setDisplayInformation(Grass.class, new DisplayInformation(Color.GREEN, "grass"));
             p.setDisplayInformation(Rabbit.class, new DisplayInformation(Color.GRAY, "rabbit-large"));
