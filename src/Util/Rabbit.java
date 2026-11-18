@@ -3,16 +3,15 @@ package Util;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
-import java.awt.Color;
 import itumulator.executable.DisplayInformation;
 import itumulator.executable.DynamicDisplayInformationProvider;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;
 
-
-public class Rabbit implements Actor, DynamicDisplayInformationProvider{
+public class Rabbit implements Actor, DynamicDisplayInformationProvider {
     private int age;
     private int energy;
     private int food;
@@ -21,7 +20,7 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider{
     private Burrow burrow;
     private boolean sleeping = false;
 
-    public Rabbit(){
+    public Rabbit() {
         this.age = 0;
         this.energy = 100;
         this.food = 100;
@@ -30,103 +29,124 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider{
 
     @Override
     public DisplayInformation getInformation() {
-        if (sleeping && age>= 20) {
+        if (sleeping && age >= 20) {
             return new DisplayInformation(Color.GRAY, "rabbit-sleeping");
         } else if (sleeping) {
             return new DisplayInformation(Color.GRAY, "rabbit-small-sleeping");
-        } else if (age >= 0 && age < 20) {
+        } else if (age < 20) {
             return new DisplayInformation(Color.GRAY, "rabbit-small");
         } else {
             return new DisplayInformation(Color.GRAY, "rabbit-large");
         }
     }
 
-    // act() bliver kaldt af simulatoren ved hvert skridt. Her kaldes alle ting kaninen gør.
+    // act() bliver kaldt ved hvert skridt. Kaninen gør kun én ting pr. skridt.
     @Override
     public void act(World world) {
-        age++;      // kaninen bliver ældre
-        food--;     // mister 1 food pr. skridt
-        energy--;   // den mister også lidt energi, når den bliver ældre
-        sleeping = world.isNight();
+        age();
+        food();
+        energy();
+        sleeping = isSleeping(world);
 
-            // Kaninen dør, hvis den er sulten (food = 0) eller for gammel
+        if (die(world)) {
+            return;                 // kaninen er død, stop her
+        }
+
+        if (sleeping) {
+            moveToBurrow(world);    // nat: søg mod hullet
+            return;
+        }
+
+        // dag: gør én ting, i prioriteret rækkefølge
+        if (eatGrass(world)) {
+            return;
+        }
+        if (!hasBurrow() && random.nextInt(10) == 0) {
+            setBurrow(world);
+            return;
+        }
+        if (canReproduce(world) && random.nextInt(10) == 0) {
+            giveBirth(world);
+            return;
+        }
+        move(world);
+    }
+
+    private void age() {
+        age++;
+    }
+
+    private void food() {
+        food--;
+    }
+
+    private void energy() {
+        energy--;
+    }
+
+    private boolean isSleeping(World world) {
+        return world.isNight();
+    }
+
+    // Kaninen dør af sult eller alderdom. Returnerer true, hvis den døde.
+    private boolean die(World world) {
         if (food <= 0 || age >= maxAge) {
-            world.delete(this); // fjerner kaninen fra verdenen
-            return; // stop her, ellers fortsætter koden for en død kanin
+            world.delete(this);
+            return true;
         }
-
-        // Om dagen: spis græs, hvis der er noget, ellers gå rundt
-        if (world.isDay()) {
-            if (eatGrass(world)) { // spiste, færdig for denne gang
-            } else if (hasBurrow(world) == false && random.nextInt(10) == 0) {
-                setBurrow(world);
-            } else if (canReproduce(world) && random.nextInt(7) == 0) {
-                giveBirth(world);
-            } else {
-                move(world);
-            } 
-        }
-
-        if (world.isNight()) {
-            moveToBurrow(world);
-        }
+        return false;
     }
 
-    private int getAge(){
+    public int getAge() {
         return age;
-    }
-
-    // Giver kaninen mere mad. Bliver kaldt, når den har spist græs.
-    public void eat() {
-        food = food + 10;
     }
 
     // Flytter kaninen til et tilfældigt ledigt felt ved siden af sig
     private void move(World world) {
-        Location current = world.getLocation(this);                  // hvor står kaninen nu?
-        Set<Location> free = world.getEmptySurroundingTiles(current); // ledige felter ved siden af kaninen
+        Location current = world.getLocation(this);
+        Set<Location> free = world.getEmptySurroundingTiles(current);
 
-        // Kun hvis der er mindst et ledigt felt (ellers står kaninen bare stille)
         if (!free.isEmpty()) {
-            ArrayList<Location> options = new ArrayList<>(free);      // lav sættet om til en liste, så vi kan vælge ved et tal
-            Location next = options.get(random.nextInt(options.size())); // vælg et tilfældigt felt fra listen
-            world.move(this, next);                                   // flyt kaninen derhen
+            ArrayList<Location> options = new ArrayList<>(free);
+            Location next = options.get(random.nextInt(options.size()));
+            world.move(this, next);
         }
     }
 
-        // Spiser græs, hvis kaninen står oven på noget.
-        // Returnerer true, hvis den spiste, og false, hvis der ikke var græs.
-    private boolean eatGrass(World world) {
-        Location current = world.getLocation(this);   // kaninens felt
+    // Giver kaninen mere mad
+    public void eat() {
+        food = food + 10;
+    }
 
-        // Ligger der noget ikke-blokerende (fx græs) på feltet?
+    // Spiser græs, hvis kaninen står på noget. Returnerer true, hvis den spiste.
+    private boolean eatGrass(World world) {
+        Location current = world.getLocation(this);
+
         if (world.containsNonBlocking(current)) {
-            Object thing = world.getNonBlocking(current); // hent det, der ligger der
-        
-            if (thing instanceof Grass) {                 // er det faktisk græs?
-            world.delete(thing);   // græsset bliver spist og forsvinder
-            eat();                 // kaninens food stiger
-            return true;           // ja, kaninen spiste
+            Object thing = world.getNonBlocking(current);
+            if (thing instanceof Grass) {
+                world.delete(thing);
+                eat();
+                return true;
             }
         }
-    
-        return false;   // der var intet græs at spise
+        return false;
     }
 
+    // Er der en voksen kanin ved siden af?
     private boolean canReproduce(World world) {
         Location current = world.getLocation(this);
-        Set<Location> neighbours = world.getSurroundingTiles(current);
 
-        for (Location l : neighbours) {
+        for (Location l : world.getSurroundingTiles(current)) {
             Object o = world.getTile(l);
             if (o instanceof Rabbit && ((Rabbit) o).getAge() >= 20) {
                 return true;
             }
         }
-
         return false;
     }
 
+    // Placerer en unge på et tilfældigt ledigt nabofelt
     private void giveBirth(World world) {
         Location current = world.getLocation(this);
         Set<Location> free = world.getEmptySurroundingTiles(current);
@@ -138,18 +158,14 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider{
         }
     }
 
-    private boolean hasBurrow(World world) {
-        if (this.burrow == null) {
-            return false;
-        } else {
-            return true;
-        }
+    private boolean hasBurrow() {
+        return burrow != null;
     }
 
+    // Del et hul i nærheden, ellers grav et nyt
     private void setBurrow(World world) {
         Location current = world.getLocation(this);
 
-        // 1. Er der et hul ved siden af? Så del det.
         for (Location l : world.getSurroundingTiles(current)) {
             if (world.containsNonBlocking(l) && world.getNonBlocking(l) instanceof Burrow) {
                 burrow = (Burrow) world.getNonBlocking(l);
@@ -157,9 +173,8 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider{
             }
         }
 
-        // 2. Ellers: grav et nyt hul, hvor kaninen står
         if (world.containsNonBlocking(current) && world.getNonBlocking(current) instanceof Grass) {
-            world.delete(world.getNonBlocking(current));   // fjern græs, så der er plads
+            world.delete(world.getNonBlocking(current));
         }
 
         if (!world.containsNonBlocking(current)) {
@@ -168,10 +183,29 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider{
         }
     }
 
+    // Går ét skridt mod hullet, hvis feltet er ledigt
     private void moveToBurrow(World world) {
-        if (hasBurrow(world)) {
-            Location target = world.getLocation(this.burrow);
-            world.move(this, target);
+        if (!hasBurrow()) {
+            return;
+        }
+
+        Location here = world.getLocation(this);
+        Location target = world.getLocation(burrow);
+
+        if (here.equals(target)) {
+            return;
+        }
+
+        int dx = Integer.compare(target.getX(), here.getX());
+        int dy = Integer.compare(target.getY(), here.getY());
+        Location next = new Location(here.getX() + dx, here.getY() + dy);
+
+        if (world.isTileEmpty(next)) {
+            world.move(this, next);
+        }
+
+        if (here.equals(target)) {
+            world.remove(this);
         }
     }
 }
