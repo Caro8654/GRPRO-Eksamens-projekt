@@ -19,6 +19,7 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider {
     private Random random = new Random();
     private Burrow burrow;
     private boolean sleeping = false;
+    private boolean removed = false;
 
     public Rabbit() {
         this.age = 0;
@@ -52,10 +53,22 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider {
             return;                 // kaninen er død, stop her
         }
 
+        // NYT: kaninen er nede i hullet, så den skal ikke gøre noget
+    if (isRemoved()) {
+       if (!sleeping) {
+        wakeUp(world);      // morgen: prøv at komme op
+    }
+        return;
+    }
+
         if (sleeping) {
-            moveToBurrow(world);    // nat: søg mod hullet
+            if (standsOnBurrow(world)) {
+                removeRabbit(world);
+            } else {
+                moveToBurrow(world);
+            }
             return;
-        }
+        } 
 
         // dag: gør én ting, i prioriteret rækkefølge
         if (eatGrass(world)) {
@@ -183,29 +196,73 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider {
         }
     }
 
-    // Går ét skridt mod hullet, hvis feltet er ledigt
+   // Hopper direkte hen til hullet, hvis det er ledigt
     private void moveToBurrow(World world) {
-        if (!hasBurrow()) {
-            return;
-        }
+    if (!hasBurrow()) {
+        return;
+    }
 
+    Location here = world.getLocation(this);
+    Location target = world.getLocation(burrow);
+
+    // Allerede fremme
+    if (here.equals(target)) {
+        return;
+    }
+
+    // Hullet er ledigt: hop derhen
+    if (world.isTileEmpty(target)) {
+        world.move(this, target);
+    }
+    // Ellers står der en anden kanin på hullet, og så venter den til næste skridt
+}
+
+    private void removeRabbit(World world) {
+        if (!hasBurrow()) {
+        return;                 // ingen hul → gør ingenting
+    }
+        
         Location here = world.getLocation(this);
         Location target = world.getLocation(burrow);
 
-        if (here.equals(target)) {
+        if (here.equals(target) && sleeping && !isRemoved()) {
+            world.remove(this);
+            removed = true;
+        }
+    }
+
+    private boolean isRemoved() {
+        return removed;
+    }
+
+    // Sætter kaninen tilbage på kortet ved hullet
+    private void wakeUp(World world) {
+        Location target = world.getLocation(burrow);
+
+    // Er hullet ledigt, kommer kaninen op på hullet
+        if (world.isTileEmpty(target)) {
+            world.setTile(target, this);
+            removed = false;
             return;
         }
 
-        int dx = Integer.compare(target.getX(), here.getX());
-        int dy = Integer.compare(target.getY(), here.getY());
-        Location next = new Location(here.getX() + dx, here.getY() + dy);
+    // Står der en anden kanin på hullet, kommer den op på et tilfældigt ledigt felt ved siden af
+        Set<Location> freeTiles = world.getEmptySurroundingTiles(target);
+            if (!freeTiles.isEmpty()) {
+                ArrayList<Location> options = new ArrayList<>(freeTiles);
+                Location spot = options.get(random.nextInt(options.size()));
+                world.setTile(spot, this);
+                removed = false;
+            }
+        // Ellers er alt omkring hullet optaget, og kaninen bliver nede og prøver igen næste skridt
+    }
 
-        if (world.isTileEmpty(next)) {
-            world.move(this, next);
-        }
-
-        if (here.equals(target)) {
-            world.remove(this);
+    private boolean standsOnBurrow(World world) {
+        if (!hasBurrow()) {
+            return false;
+        } else {
+            return world.getLocation(this).equals(world.getLocation(burrow));
         }
     }
+
 }

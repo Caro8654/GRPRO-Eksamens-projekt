@@ -18,7 +18,7 @@ public class Main {
 
         //GROW GRASS
         try{
-            Scanner s  = new Scanner(new File("week-1/t1-2cde.txt"));
+            Scanner s  = new Scanner(new File("week-1/tf1-1.txt"));
             int size = Integer.parseInt(s.nextLine());
 
             Program p = new Program(size, 800, 750);
