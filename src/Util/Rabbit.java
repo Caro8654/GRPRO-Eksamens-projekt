@@ -97,7 +97,7 @@ public class Rabbit implements Actor, DynamicDisplayInformationProvider {
         energy--;
     }
 
-    private boolean isSleeping(World world) {
+    public boolean isSleeping(World world) {
         return world.isNight();
     }
 
