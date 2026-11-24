@@ -10,14 +10,14 @@ import itumulator.executable.DynamicDisplayInformationProvider;
 import itumulator.simulator.Actor;
 
 public abstract class Animal implements Actor, DynamicDisplayInformationProvider {
-    protected int age;
-    protected int energy;
-    protected int food;
-    protected int maxAge;
-    protected Random random = new Random();
-    protected boolean removed;
-    protected int adultAge;
-    protected boolean sleeping;
+    private int age;
+    private int energy;
+    private int food;
+    private int maxAge;
+    private Random random = new Random();
+    private boolean removed;
+    private int adultAge;
+    private boolean sleeping;
 
     protected Animal(int maxAge, int adultAge) {
         this.age = 0;
@@ -30,31 +30,23 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
     }
 
     // Alderen stiger med 1
-    public void age() {
+    protected void ageEnergy() {
         age++;
+        energy--;
     }
 
     // Gør alderen tilgængelig for andre dyr
-    public int getAge() {
+    protected int getAge() {
         return age;
     }
 
     // Maden falder med 1
-    public void food() {
+    protected void foodEnergy() {
         food--;
-    }
-
-    // Energien falder med 1
-    public void energy() {
         energy--;
     }
 
-    // Dyret sover, når det er nat i verdenen
-    public boolean isSleeping(World world) {
-        return world.isNight();
-    }
-
-    public boolean isAdult() {
+    protected boolean isAdult() {
         return age >= adultAge;
     }
 
@@ -62,14 +54,25 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
     protected abstract boolean eat(World world);
 
     // Giver dyrene mere mad
-    public void addFood() {
+    protected void addFoodEnergy() {
         food = food + 10;
+        energy = energy + 10;
+    }
+
+    // Tjekker om dyret sover, hvilket det gør når det er nat
+    protected void updateSleeping(World world) {
+        sleeping = world.isNight();
+    }
+
+    // Returnere om dyret sover
+    protected boolean isAsleep() {
+        return sleeping;
     }
 
     // ---------------------------------- ALT OMHANDLENDE LOKATION, BEVÆGELSE OG EKSISTENS ---------------------------------------
 
     // Flytter dyret til et tilfældigt ledigt felt ved siden af sig
-    public void move(World world) {
+    protected void move(World world) {
         Location next = randomFreeTile(world, world.getLocation(this));
         if (next != null) {
             world.move(this, next);
@@ -87,9 +90,9 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
     }
 
     // Dyret dør af sult eller alderdom. Returnerer true, hvis den døde.
-    public boolean die(World world) {
+    protected boolean die(World world) {
         // Maden er brugt op, eller alderen har nået maksimum
-        if (food <= 0 || age >= maxAge) {
+        if (food <= 0 || age >= maxAge || energy <= 0) {
             // delete fjerner dyret helt fra verdenen
             world.delete(this);
             return true;
@@ -98,13 +101,17 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
     }
 
     // Fortæller, om dyret er nede i hullet og dermed midlertidigt forsvundet fra hvad vi kan se
-    public boolean isRemoved() {
+    protected boolean isRemoved() {
         return removed;
+    }
+
+    protected void setRemoved(boolean removed) {
+        this.removed = removed;
     }
 
     // ---------------------- ALT MED REPRODUCERE OG NYE UNGER ------------------------------------------
 
-    public boolean canReproduce(World world) {
+    protected boolean canReproduce(World world) {
         Location current = world.getLocation(this);
 
         for (Location l : world.getSurroundingTiles(current)) {
@@ -120,7 +127,7 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
 
     // Placerer en unge på et tilfældigt ledigt nabofelt.
     // Er der ingen ledige felter, bliver der ikke født en unge dette trin
-    public void giveBirth(World world) {
+    protected void giveBirth(World world) {
         Location spot = randomFreeTile(world, world.getLocation(this));
         if (spot != null) {
             world.setTile(spot, addBaby());

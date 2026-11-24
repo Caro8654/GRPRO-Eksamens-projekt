@@ -1,10 +1,11 @@
 package Animals;
 
+import java.awt.Color;
+import java.util.Random;
+
 import itumulator.world.Location;
 import itumulator.world.World;
 import itumulator.executable.DisplayInformation;
-
-import java.awt.Color;
 import Util.Burrow;
 import Util.Grass;
 
@@ -14,6 +15,7 @@ import Util.Grass;
 // - (Blocking: andre kan ikke stå på samme felt som kaninen, fordi den ikke implementerer NonBlocking)
 public class Rabbit extends Animal {
     private Burrow burrow;
+    private Random random = new Random();
 
     public Rabbit() {
         // maxAge = 100, voksen fra alder 20
@@ -21,16 +23,19 @@ public class Rabbit extends Animal {
         this.burrow = null;
     }
 
-    // Metode fra DynamicDisplayInformationProvider. Vælger billede efter kaninens tilstand.
-    // Alder 20 er grænsen mellem unge og voksne. Farven (grå) bruges, hvis billedet ikke findes
+    // Metode fra DynamicDisplayInformationProvider. Vælger billede efter kaninens
+    // tilstand.
+    // Alder 20 er grænsen mellem unge og voksne. Farven (grå) bruges, hvis billedet
+    // ikke findes
+
     @Override
     public DisplayInformation getInformation() {
         // Sover og er voksen
-        if (sleeping && isAdult()) {
+        if (isAsleep() && isAdult()) {
             return new DisplayInformation(Color.GRAY, "rabbit-sleeping");
 
             // Sover og er ung
-        } else if (sleeping && !isAdult()) {
+        } else if (isAsleep() && !isAdult()) {
             return new DisplayInformation(Color.GRAY, "rabbit-small-sleeping");
 
             // Vågen og ung
@@ -43,16 +48,14 @@ public class Rabbit extends Animal {
         }
     }
 
-    // act() bliver kaldt ved hvert skridt. Kaninen gør kun en ting pr. skridt.
+    // ------------------- act() bliver kaldt ved hvert skridt. Kaninen gør kun en ting pr. skridt. ------------------------------
     @Override
     public void act(World world) {
         // Tiden går: alder stiger med 1, mad og energi falder med 1
-        super.age();
-        food();
-        energy();
+        super.ageEnergy();
+        foodEnergy();
 
-        // bruger hjælpefunktion til at tjekke om det er nat eller dag
-        sleeping = isSleeping(world);
+        updateSleeping(world);
 
         // Tjekker om kaninen dør (sult eller alderdom)
         if (die(world)) {
@@ -64,7 +67,7 @@ public class Rabbit extends Animal {
         // normale handlinger
         if (isRemoved()) {
             // Når det ikke længere er nat, prøver kaninen at komme op af hullet
-            if (!sleeping) {
+            if (!isAsleep()) {
                 wakeUp(world);
             }
             return;
@@ -72,7 +75,7 @@ public class Rabbit extends Animal {
 
         // Om natten: står kaninen på sit hul, fjernes den fra kortet (den sover i
         // hullet). Ellers bevæger den sig mod hullet
-        if (sleeping) {
+        if (isAsleep()) {
             if (standsOnBurrow(world)) {
                 removeAnimal(world);
             } else {
@@ -101,6 +104,8 @@ public class Rabbit extends Animal {
         move(world);
     }
 
+    // ------------------------------- Kaninen spiser ------------------------------------------
+
     @Override
     // Spiser græs, hvis kaninen står på noget. Returnerer true, hvis den spiste.
     protected boolean eat(World world) {
@@ -113,16 +118,11 @@ public class Rabbit extends Animal {
             // Hvis det er græs: slet græsset, giv kaninen mad og returnér true
             if (thing instanceof Grass) {
                 world.delete(thing);
-                addFood();
+                addFoodEnergy();
                 return true;
             }
         }
         return false;
-    }
-
-    @Override
-    protected Animal addBaby() {
-        return new Rabbit();
     }
 
     // ------------------------------- ALT DER HAR MED DYRETS HJEM AT GØRE ------------------------------------
@@ -194,9 +194,14 @@ public class Rabbit extends Animal {
 
     // ---------------------------- ALT MED DYRETS EKSISTENS I VERDENEN ----------------------------------
 
+    @Override
+    protected Animal addBaby() {
+        return new Rabbit();
+    }
+
     // Tager kaninen af kortet, når den står på sit hul om natten (den sover i
     // hullet)
-    private void removeAnimal(World world) {
+    protected void removeAnimal(World world) {
         if (!hasBurrow()) {
             // ingen hul → gør ingenting
             return;
@@ -205,10 +210,11 @@ public class Rabbit extends Animal {
         Location here = world.getLocation(this);
         Location target = world.getLocation(burrow);
 
-        // Står kaninen på hullet, sover og ikke allerede er fjernet, tages den af kortet med remove, og removed sættes til true
-        if (here.equals(target) && sleeping && !isRemoved()) {
+        // Står kaninen på hullet, sover og ikke allerede er fjernet, tages den af
+        // kortet med remove, og removed sættes til true
+        if (here.equals(target) && isAsleep() && !isRemoved()) {
             world.remove(this);
-            removed = true;
+            setRemoved(true);
         }
     }
 
@@ -220,17 +226,19 @@ public class Rabbit extends Animal {
         // Er hullet ledigt, kommer kaninen op på hullet
         if (world.isTileEmpty(target)) {
             world.setTile(target, this);
-            removed = false;
+            setRemoved(false);
             return;
         }
 
-        // Står der en anden kanin på hullet, kommer den op på et tilfældigt ledigt felt ved siden af
-        // Ellers er alt omkring hullet optaget, og kaninen bliver nede og prøver igen næste skridt
+        // Står der en anden kanin på hullet, kommer den op på et tilfældigt ledigt felt
+        // ved siden af
+        // Ellers er alt omkring hullet optaget, og kaninen bliver nede og prøver igen
+        // næste skridt
 
         Location spot = randomFreeTile(world, target);
         if (spot != null) {
             world.setTile(spot, this);
-            removed = false;
+            setRemoved(false);
         }
     }
 
