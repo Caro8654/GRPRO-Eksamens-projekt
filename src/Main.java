@@ -16,9 +16,7 @@ public class Main {
             p.show();
 
             // Løkke, der kører 200 gange, altså 200 simulationstrin
-            for (int i = 0; i < 200; i++) {
-                p.simulate();
-            }
+            p.simulate();
 
         // Fanger fejlen, hvis input-filen ikke findes
         } catch (FileNotFoundException e) {

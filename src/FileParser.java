@@ -7,7 +7,7 @@ import java.io.FileNotFoundException;
 import java.util.Random;
 import java.util.Scanner;
 import Util.Grass;
-import Util.Rabbit;
+import Animals.Rabbit;
 import Util.Burrow;
 
 // FileParser omsætter en input-fil til en færdig verden med aktører og elementer
