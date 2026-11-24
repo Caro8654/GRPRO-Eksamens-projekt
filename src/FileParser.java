@@ -1,11 +1,11 @@
-import itumulator.executable.Program;
-import itumulator.world.Location;
-import itumulator.world.World;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Random;
 import java.util.Scanner;
+
+import itumulator.executable.Program;
+import itumulator.world.Location;
+import itumulator.world.World;
 import Util.Grass;
 import Animals.Rabbit;
 import Util.Burrow;
@@ -91,6 +91,8 @@ public class FileParser {
                 }
             }
         }
+
+        s.close();
 
         // Når alle linjer er læst, returneres det færdige Program til Main
         return p;
