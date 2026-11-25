@@ -9,15 +9,17 @@ import itumulator.world.World;
 import Util.Grass;
 import Animals.Rabbit;
 import Util.Burrow;
+import Animals.Wolf;
 
 // FileParser omsætter en input-fil til en færdig verden med aktører og elementer
 public class FileParser {
 
-    //Den tager filens sti og returnerer et Program.
+    // Den tager filens sti og returnerer et Program.
     public static Program load(String path) throws FileNotFoundException {
         Scanner s = new Scanner(new File(path));
 
-        // Læser filens første linje (N, verdenens størrelse) og laver teksten om til et heltal
+        // Læser filens første linje (N, verdenens størrelse) og laver teksten om til et
+        // heltal
         int size = Integer.parseInt(s.nextLine());
 
         // Opretter simulatoren med en verden på size x size felter.
@@ -29,7 +31,7 @@ public class FileParser {
 
         // Gentager så længe der er flere linjer i filen
         while (s.hasNextLine()) {
-            
+
             // Læser næste linje og fjerner mellemrum i begyndelsen og slutningen
             String line = s.nextLine().trim();
 
@@ -48,7 +50,8 @@ public class FileParser {
             // Variabel til antallet, der skal tilføjes
             int amount;
 
-            // Tjekker om andet led indeholder en bindestreg, altså om det er et interval som "10-20"
+            // Tjekker om andet led indeholder en bindestreg, altså om det er et interval
+            // som "10-20"
             if (input[1].contains("-")) {
                 // Deler "10-20" op i "10" og "20" og laver dem til heltallene min og max
                 String[] range = input[1].split("-");
@@ -61,7 +64,7 @@ public class FileParser {
                 // Ingen bindestreg betyder et fast tal, som laves om til et heltal
                 amount = Integer.parseInt(input[1]);
             }
-            
+
             if (type.equals("grass")) {
                 for (int i = 0; i < amount; i++) {
                     // Find et ledigt, tilfældigt felt med hjælpemetoden
@@ -75,7 +78,8 @@ public class FileParser {
                     // Laver en tilfældig position med x og y
                     Location l = new Location(r.nextInt(size), r.nextInt(size));
 
-                    // Så længe feltet ikke er tomt (isTileEmpty er false), trækkes en ny tilfældig position. Løkken stopper, når et tomt felt er fundet
+                    // Så længe feltet ikke er tomt (isTileEmpty er false), trækkes en ny tilfældig
+                    // position. Løkken stopper, når et tomt felt er fundet
                     while (!w.isTileEmpty(l)) {
                         l = new Location(r.nextInt(size), r.nextInt(size));
                     }
@@ -83,34 +87,48 @@ public class FileParser {
                     w.setTile(l, new Rabbit());
                 }
 
-            // Hvis typen er burrow (kaninhul): samme fremgangsmåde som for græs
+                // Hvis typen er burrow (kaninhul): samme fremgangsmåde som for græs
             } else if (type.equals("burrow")) {
                 for (int i = 0; i < amount; i++) {
                     Location l = findFreeGroundTile(w, size, r);
                     w.setTile(l, new Burrow());
                 }
+            } else if (type.equals("wolf")) {
+                for (int i = 0; i < amount; i++) {
+                    // Laver en tilfældig position med x og y
+                    Location l = new Location(r.nextInt(size), r.nextInt(size));
+
+                    // Så længe feltet ikke er tomt (isTileEmpty er false), trækkes en ny tilfældig
+                    // position. Løkken stopper, når et tomt felt er fundet
+                    while (!w.isTileEmpty(l)) {
+                        l = new Location(r.nextInt(size), r.nextInt(size));
+                    }
+                    // Placerer en ny ulv på det fundne felt
+                    w.setTile(l, new Wolf());
+                }
             }
         }
-
+        
         s.close();
 
-        // Når alle linjer er læst, returneres det færdige Program til Main
-        return p;
+            // Når alle linjer er læst, returneres det færdige Program til Main
+            return p;
     }
 
-
-    // Privat hjælpemetode, som kun bruges inde i FileParser, finder et felt uden noget på jorden
+    // Privat hjælpemetode, som kun bruges inde i FileParser, finder et felt uden
+    // noget på jorden
     private static Location findFreeGroundTile(World w, int size, Random r) {
         // Trækker en tilfældig position
         Location l = new Location(r.nextInt(size), r.nextInt(size));
 
-        // Så længe feltet allerede indeholder et NonBlocking-objekt (fx græs eller et hul), trækkes en ny position. Det sikrer, at to ting på jorden ikke placeres oven på hinanden
+        // Så længe feltet allerede indeholder et NonBlocking-objekt (fx græs eller et
+        // hul), trækkes en ny position. Det sikrer, at to ting på jorden ikke placeres
+        // oven på hinanden
         while (w.containsNonBlocking(l)) {
             l = new Location(r.nextInt(size), r.nextInt(size));
         }
         // Returnerer den frie position
         return l;
     }
-
 
 }

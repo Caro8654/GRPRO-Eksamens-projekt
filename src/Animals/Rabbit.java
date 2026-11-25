@@ -128,12 +128,16 @@ public class Rabbit extends Animal {
     // ------------------------------- ALT DER HAR MED DYRETS HJEM AT GØRE ------------------------------------
 
     // Ser om kaninen har et hul
-    private boolean hasBurrow() {
+    public boolean hasBurrow() {
         return burrow != null;
     }
 
+    public Burrow getBurrow() {
+        return burrow;
+    }
+
     // Del et hul i nærheden, ellers grav et nyt
-    private void setBurrow(World world) {
+    public void setBurrow(World world) {
         Location current = world.getLocation(this);
 
         // Først kigger kaninen på nabofelterne. Er der et hul, bliver det kaninens hul
