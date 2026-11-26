@@ -42,8 +42,26 @@ void berryHasBeenEaten() {
 
     assertTrue(berry.hasBerries());
 
-    berry.hasBeenEaten();
-    
+    berry.eatBerrie();
+
     assertFalse(berry.hasBerries());
-}   
+}
+
+@Test
+void berryRegrows() {
+    for (int i = 0; i < 10; i++) {
+        berry.act(world);
+    }
+
+    assertTrue(berry.hasBerries());
+
+    berry.eatBerrie();
+
+    assertFalse(berry.hasBerries());
+
+    for (int i = 0; i < 10; i++) {
+        berry.act(world);
+    }
+    assertTrue(berry.hasBerries());
+}
 }
