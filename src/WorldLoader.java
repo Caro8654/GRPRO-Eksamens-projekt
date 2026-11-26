@@ -8,8 +8,9 @@ import itumulator.world.Location;
 import itumulator.world.World;
 import Util.Grass;
 import Animals.Rabbit;
-import Util.Burrow;
 import Animals.Wolf;
+import Animals.WolfPack;
+import Home.Burrow;
 import Animals.Bear;
 import Util.Berry;
 
@@ -97,6 +98,8 @@ public class WorldLoader {
                     w.setTile(l, new Burrow());
                 }
             } else if (type.equals("wolf")) {
+                WolfPack pack = new WolfPack();
+                
                 for (int i = 0; i < amount; i++) {
                     // Laver en tilfældig position med x og y
                     Location l = new Location(r.nextInt(size), r.nextInt(size));
@@ -107,7 +110,7 @@ public class WorldLoader {
                         l = new Location(r.nextInt(size), r.nextInt(size));
                     }
                     // Placerer en ny ulv på det fundne felt
-                    w.setTile(l, new Wolf());
+                    w.setTile(l, new Wolf(pack));
                 }
                 
             } else if (type.equals("bear")) {
