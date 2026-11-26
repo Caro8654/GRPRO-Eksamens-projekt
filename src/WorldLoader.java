@@ -10,9 +10,12 @@ import Util.Grass;
 import Animals.Rabbit;
 import Util.Burrow;
 import Animals.Wolf;
+import Animals.Bear;
+import Util.Berry;
+
 
 // FileParser omsætter en input-fil til en færdig verden med aktører og elementer
-public class FileParser {
+public class WorldLoader {
 
     // Den tager filens sti og returnerer et Program.
     public static Program load(String path) throws FileNotFoundException {
@@ -106,7 +109,31 @@ public class FileParser {
                     // Placerer en ny ulv på det fundne felt
                     w.setTile(l, new Wolf());
                 }
+                
+            } else if (type.equals("bear")) {
+                for (int i = 0; i < amount; i++) {
+                    // Laver en tilfældig position med x og y
+                    Location l = new Location(r.nextInt(size), r.nextInt(size));
+
+                    // Så længe feltet ikke er tomt (isTileEmpty er false), trækkes en ny tilfældig
+                    // position. Løkken stopper, når et tomt felt er fundet
+                    while (!w.isTileEmpty(l)) {
+                        l = new Location(r.nextInt(size), r.nextInt(size));
+                    }
+                    // Placerer en ny bjørn på det fundne felt
+                    w.setTile(l, new Bear());
+                }
+
+            } else if (type.equals("berry")) {
+                for (int i = 0; i < amount; i++) {
+                    // Find et ledigt, tilfældigt felt med hjælpemetoden
+                    Location l = findFreeGroundTile(w, size, r);
+                    // Placér et nyt Berry-objekt på feltet
+                    w.setTile(l, new Berry());
+                }
             }
+
+            
         }
         
         s.close();
