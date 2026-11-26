@@ -69,7 +69,7 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
         return sleeping;
     }
 
-    // ---------------------------------- ALT OMHANDLENDE LOKATION, BEVÆGELSE OG EKSISTENS ---------------------------------------
+    // ---------------------------------- LOKATION, BEVÆGELSE OG EKSISTENS ---------------------------------------
 
     // Flytter dyret til et tilfældigt ledigt felt ved siden af sig
     protected void move(World world) {
@@ -87,6 +87,28 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
         }
         ArrayList<Location> options = new ArrayList<>(free);
         return options.get(random.nextInt(options.size()));
+    }
+
+    protected int distance(Location a, Location b) {
+        return Math.max(Math.abs(a.getX() - b.getX()), Math.abs(a.getY() - b.getY()));
+    }
+
+    protected void moveTowards(World world, Location target) {
+        Location here = world.getLocation(this);
+        Location best = null;
+        int bestDist = distance(here, target);
+
+        for (Location l : world.getEmptySurroundingTiles(here)) {
+            int d = distance(l, target);
+            if (d < bestDist) {
+                best = l;
+                bestDist = d;
+            }
+        }
+
+        if (best != null) {
+            world.move(this,best);
+        }
     }
 
     // Dyret dør af sult eller alderdom. Returnerer true, hvis den døde.
@@ -135,5 +157,8 @@ public abstract class Animal implements Actor, DynamicDisplayInformationProvider
     }
 
     protected abstract Animal addBaby();
+
+    //-------------------- Dyrernes hjem -------------------------------
+
 
 }

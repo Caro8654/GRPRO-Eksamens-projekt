@@ -3,17 +3,18 @@ package Animals;
 import java.awt.Color;
 import java.util.Random;
 
+import Home.Burrow;
+import Home.Homes;
 import itumulator.world.Location;
 import itumulator.world.World;
 import itumulator.executable.DisplayInformation;
-import Util.Burrow;
 import Util.Grass;
 
 // kanin er 2 ting:
 // - Actor: kaninen har en act-metode, som kaldes ved hvert simulationstrin 
 // - DynamicDisplayInformationProvider: kaninen leverer selv sit udseende til det grafiske vindue
 // - (Blocking: andre kan ikke stå på samme felt som kaninen, fordi den ikke implementerer NonBlocking)
-public class Rabbit extends Animal {
+public class Rabbit extends HomeAnimal {
     private Burrow burrow;
     private Random random = new Random();
 
@@ -25,8 +26,7 @@ public class Rabbit extends Animal {
 
     // Metode fra DynamicDisplayInformationProvider. Vælger billede efter kaninens
     // tilstand.
-    // Alder 20 er grænsen mellem unge og voksne. Farven (grå) bruges, hvis billedet
-    // ikke findes
+    // Farven (grå) bruges, hvis billedet ikke findes
 
     @Override
     public DisplayInformation getInformation() {
@@ -52,7 +52,7 @@ public class Rabbit extends Animal {
     @Override
     public void act(World world) {
         // Tiden går: alder stiger med 1, mad og energi falder med 1
-        super.ageEnergy();
+        ageEnergy();
         foodEnergy();
 
         updateSleeping(world);
@@ -76,10 +76,10 @@ public class Rabbit extends Animal {
         // Om natten: står kaninen på sit hul, fjernes den fra kortet (den sover i
         // hullet). Ellers bevæger den sig mod hullet
         if (isAsleep()) {
-            if (standsOnBurrow(world)) {
+            if (standsOnHome(world)) {
                 removeAnimal(world);
             } else {
-                moveToBurrow(world);
+                moveToHome(world);
             }
             return;
         }
@@ -91,7 +91,7 @@ public class Rabbit extends Animal {
         }
         // 2. Hvis den ikke har et hul, er der 1/10 chance for, at den graver eller
         // deler et hul
-        if (!hasBurrow() && random.nextInt(10) == 0) {
+        if (!hasHome() && random.nextInt(10) == 0) {
             setBurrow(world);
             return;
         }
@@ -127,10 +127,6 @@ public class Rabbit extends Animal {
 
     // ------------------------------- ALT DER HAR MED DYRETS HJEM AT GØRE ------------------------------------
 
-    // Ser om kaninen har et hul
-    public boolean hasBurrow() {
-        return burrow != null;
-    }
 
     public Burrow getBurrow() {
         return burrow;
@@ -162,38 +158,10 @@ public class Rabbit extends Animal {
             world.setTile(current, burrow);
         }
     }
-
-    // Hopper direkte hen til hullet, hvis det er ledigt
-    private void moveToBurrow(World world) {
-        // Har kaninen intet hul, gør den ikke noget
-        if (!hasBurrow()) {
-            return;
-        }
-
-        // Finder kaninens position og hullets position
-        Location here = world.getLocation(this);
-        Location target = world.getLocation(burrow);
-
-        // Allerede fremme
-        if (here.equals(target)) {
-            return;
-        }
-
-        // Hullet er ledigt: hop derhen
-        if (world.isTileEmpty(target)) {
-            world.move(this, target);
-        }
-        // Ellers står der en anden kanin på hullet, og så venter den til næste skridt
-    }
-
-    // Returnerer true, hvis kaninen har et hul, og dens position er den samme som
-    // hullets
-    private boolean standsOnBurrow(World world) {
-        if (!hasBurrow()) {
-            return false;
-        } else {
-            return world.getLocation(this).equals(world.getLocation(burrow));
-        }
+    
+    @Override
+    protected Homes getHome() {
+        return burrow;
     }
 
     // ---------------------------- ALT MED DYRETS EKSISTENS I VERDENEN ----------------------------------
@@ -206,21 +174,11 @@ public class Rabbit extends Animal {
     // Tager kaninen af kortet, når den står på sit hul om natten (den sover i
     // hullet)
     protected void removeAnimal(World world) {
-        if (!hasBurrow()) {
-            // ingen hul → gør ingenting
-            return;
-        }
-
-        Location here = world.getLocation(this);
-        Location target = world.getLocation(burrow);
-
-        // Står kaninen på hullet, sover og ikke allerede er fjernet, tages den af
-        // kortet med remove, og removed sættes til true
-        if (here.equals(target) && isAsleep() && !isRemoved()) {
+        if (standsOnHome(world) && isAsleep() && !isRemoved()) {
             world.remove(this);
             setRemoved(true);
         }
-    }
+    }      
 
     // Sætter kaninen tilbage på kortet ved hullet
     private void wakeUp(World world) {

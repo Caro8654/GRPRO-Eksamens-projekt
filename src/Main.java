@@ -10,7 +10,7 @@ public class Main {
         
         try{
             //Kalder load i vores egen klasse FileParser. Den læser input-filen, opretter verdenen
-            Program p = WorldLoader.load("week-2/t2-6a.txt");
+            Program p = WorldLoader.load("week-2/t2-2a.txt");
 
             // Åbner vinduet, hvor verdenen vises grafisk
             p.show();

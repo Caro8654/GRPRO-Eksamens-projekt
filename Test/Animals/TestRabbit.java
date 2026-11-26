@@ -8,10 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import Home.Burrow;
 import itumulator.world.Location;
 import itumulator.world.World;
 import Util.Grass;
-import Util.Burrow;
 
 class TestRabbit {
     private World world;
