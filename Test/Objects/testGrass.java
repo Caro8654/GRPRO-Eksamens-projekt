@@ -18,7 +18,7 @@ class testGrass {
         w.setCurrentLocation(start);
 
         for (int i = 0; i < 100; i++) {
-            grass.act(w);
+            grass.act(w); 
         }
 
         assertTrue(countGrass(w, size) > 1, "Græsset burde have spredt sig efter 100 skridt");
