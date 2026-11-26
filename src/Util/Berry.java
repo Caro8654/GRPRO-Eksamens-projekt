@@ -9,10 +9,11 @@ import itumulator.simulator.Actor;
 
 public class Berry implements NonBlocking, DynamicDisplayInformationProvider, Actor{
     int ripe = 0;
-    
+    int maxRipe = 10;
+
     @Override
     public void act(World world) {
-        if(ripe < 10) {
+        if(ripe < maxRipe) {
             ripe++;
         }
     }
@@ -26,12 +27,12 @@ public class Berry implements NonBlocking, DynamicDisplayInformationProvider, Ac
     }
 
     public boolean hasBerries() {
-        return ripe >= 10;
+        return ripe >= maxRipe;
     }
 
-    public void hasBeenEaten() {
-        if(hasBerries()) {
-            ripe = 0;
-        }
+    public void eatBerrie() {
+        ripe = 0;
     }
+
+    
 }
